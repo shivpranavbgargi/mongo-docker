@@ -1,5 +1,24 @@
 #!/bin/bash
 
+# docker exec
+function execute(){
+echo "" 
+docker exec -it mongo-repl bash 
+}
+
+# Network setup
+function setup(){
+
+docker network rm _mongonet > /dev/null 2>&1
+docker network create -d bridge _mongonet
+
+network_id=$(docker inspect -f '{{range.IPAM.Config}}{{.Gateway}}{{end}}' _mongonet | sed "s/.$//")
+
+sed -i "23s/^.*$/  bindIp: 127.0.0.1,${network_id}2/" $PWD/config/mongod.conf
+sed -i "23s/^.*$/  bindIp: 127.0.0.1,${network_id}3/" $PWD/config/mongod2.conf
+sed -i "23s/^.*$/  bindIp: 127.0.0.1,${network_id}4/" $PWD/config/mongod3.conf
+}
+
 # 1DB - No replication - Single container
 function normal(){
 
@@ -43,19 +62,22 @@ docker run -d --network _mongonet --name mongo-repl \
 	-v $(pwd)/db-repl/db1:/data/db/ \
 	-w /data/db \
 	-p 27017:27017 \
-	mongo:latest bash -c "mongod --config /data/db/mongod.conf" 
-
+	mongo:latest bash -c "mongod --config /data/db/mongod.conf" > /dev/null 2>&1 
+  
 docker run -d --network _mongonet --name mongo-repl2 \
 	-v $(pwd)/db-repl/db2:/data/db/ \
 	-w /data/db \
 	-p 27018:27017 \
-	mongo:latest bash -c "mongod --config /data/db/mongod2.conf"
+	mongo:latest bash -c "mongod --config /data/db/mongod2.conf" > /dev/null 2>&1
 
 docker run -d --network _mongonet --name mongo-repl3 \
 	-v $(pwd)/db-repl/db3:/data/db/ \
 	-w /data/db \
 	-p 27019:27017 \
-	mongo:latest bash -c "mongod --config /data/db/mongod3.conf" 
+	mongo:latest bash -c "mongod --config /data/db/mongod3.conf" > /dev/null 2>&1
+echo ""
+echo -e "\e[1;32mDocker containers started!\e[0m"
+execute
 }
 
 # main function
@@ -77,9 +99,18 @@ case $opt in
     2)
         replication-single
         ;;
-    3)
+    3)  
+		if [ "$(docker ps -q -f name=mongo-repl)" != "" > /dev/null 2>&1 ]; then
+			echo ""
+			echo "mongo-repl containers are already running."
+			execute
+			exit 0
+    	fi
+		if [ "$(docker network ls -q -f name=_mongonet)" == "" > /dev/null 2>&1 ]; then
+			setup
+		fi
     	replication-multi
-    	;;
+		;;
     *)	
     	echo ""
         echo -e "\e[1;31mError:\e[0m Select 1,2 or 3"
