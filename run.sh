@@ -1,8 +1,9 @@
 #!/bin/bash
 
+# 1DB - No replication - Single container
 function normal(){
 
-mkdir db
+mkdir db > /dev/null 2&>1
 
 docker run -it --rm --name mongo \
 	-v $(pwd)/db:/data/db/ \
@@ -10,9 +11,10 @@ docker run -it --rm --name mongo \
 	mongo:latest bash -c "mongod > /dev/null 2>&1 & sleep .5 && bash"
 }
 
+# 3DBs - Replication - Single container
 function replication-single(){
 
-mkdir -p db-replica/db{1,2,3}
+mkdir -p db-replica/db{1,2,3} > /dev/null 2&>1
 
 cat << EOF 
 Ports used: 27018, 27019, 27020
@@ -28,9 +30,10 @@ mongod --port 27019 --dbpath /data/db/db2 --replSet replica > /dev/null 2>&1 & d
 mongod --port 27020 --dbpath /data/db/db3 --replSet replica > /dev/null 2>&1 & sleep 0.5 && bash"
 }
 
+# 3DBs - Replication - Multiple containers(3)
 function replication-multi(){
 
-mkdir -p db-repl/db{1,2,3}
+mkdir -p db-repl/db{1,2,3} > /dev/null 2&>1
 
 cp ./config/mongod.conf ./db-repl/db1
 cp ./config/mongod2.conf ./db-repl/db2
@@ -55,6 +58,7 @@ docker run -d --network _mongonet --name mongo-repl3 \
 	mongo:latest bash -c "mongod --config /data/db/mongod3.conf" 
 }
 
+# main function
 function main() {
 echo ""
 echo -e "\e[1;32m	--Menu-- \e[0m"
