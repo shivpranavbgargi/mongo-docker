@@ -1,4 +1,4 @@
-#~/bin/bash
+#!/bin/bash
 
 docker run -it --rm --name mongo \
 	-v $(pwd)/db:/data/db/ \
