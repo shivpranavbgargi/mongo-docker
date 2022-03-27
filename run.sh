@@ -3,7 +3,7 @@
 # 1DB - No replication - Single container
 function normal(){
 
-mkdir db > /dev/null 2&>1
+mkdir db > /dev/null 2>&1
 
 docker run -it --rm --name mongo \
 	-v $(pwd)/db:/data/db/ \
@@ -14,7 +14,7 @@ docker run -it --rm --name mongo \
 # 3DBs - Replication - Single container
 function replication-single(){
 
-mkdir -p db-replica/db{1,2,3} > /dev/null 2&>1
+mkdir -p db-replica/db{1,2,3} > /dev/null 2>&1
 
 cat << EOF 
 Ports used: 27018, 27019, 27020
@@ -33,7 +33,7 @@ mongod --port 27020 --dbpath /data/db/db3 --replSet replica > /dev/null 2>&1 & s
 # 3DBs - Replication - Multiple containers(3)
 function replication-multi(){
 
-mkdir -p db-repl/db{1,2,3} > /dev/null 2&>1
+mkdir -p db-repl/db{1,2,3} > /dev/null 2>&1
 
 cp ./config/mongod.conf ./db-repl/db1
 cp ./config/mongod2.conf ./db-repl/db2
