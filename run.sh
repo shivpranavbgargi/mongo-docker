@@ -1,5 +1,11 @@
 #!/bin/bash
 
+# Checking if docker engine is installed
+if ! cmd_loc="$(type -p docker)" || [[ -z $cmd_loc ]]; then
+  echo -e "Install docker first.\nREF: https://docs.docker.com/engine/install"
+  exit 1
+fi
+
 # docker exec
 function execute(){
 echo "" 
